@@ -23,29 +23,22 @@ void setup() {
 }
 
 void loop() {
-  if (Serial.available() > 0) {
-    moveM = Serial.parseInt();
-  }  
   
-  if (moveM == 1){
-    pulse(100, 1, 0);
-  }
-  
-  if (moveM == 2){
-    pulse(100, 0, 0);
-  }
+  pulse(800, 1, 1);
+  delay(100);
+  pulse(800, 0, 1);
 }
 
 void pulse(int steps, int direction, int speed) {
   digitalWrite(pinAm1, direction);
   if (speed == 0) {
     digitalWrite(pinEnm1, LOW);
-    delay(15);
+    delay(50);
     digitalWrite(pinEnm1, HIGH);
   }
   for (int i = 0; i < steps; i=i+1) {
     digitalWrite(pinBm1, HIGH);
-    delayMicroseconds(100);
+    delayMicroseconds(10);
     digitalWrite(pinBm1, LOW);
   }
 }
