@@ -9,10 +9,12 @@
  communicate at 9600 bps (from 115200), and passes any serial
  data between Serial Monitor and bluetooth module.
  */
+
+ 
 #include <SoftwareSerial.h>  
 
-int bluetoothTx = 9;  // TX-O pin of bluetooth mate, Arduino D2
-int bluetoothRx = 10;  // RX-I pin of bluetooth mate, Arduino D3
+int bluetoothTx = 9;  // TX-O pin of bluetooth mate
+int bluetoothRx = 10;  // RX-I pin of bluetooth mate
 
 SoftwareSerial bluetooth(bluetoothTx, bluetoothRx);
 
