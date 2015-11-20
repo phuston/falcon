@@ -57,9 +57,9 @@ def calcsend(camera, theta, phi, posA, posB, posC):
     print Eval, NWval, SWval
     print camera
 
-    serE.write(str(Eval))
-    serSW.write(str(SWval))
-    serNW.write(str(NWval))
+    serE.write(str(Eval) + 'g')
+    serSW.write(str(SWval) + 'g')
+    serNW.write(str(NWval) + 'g')
 
 def diffcalc(path, node0, node1, node2):
     ''' given array of coordinates for camera to hit
