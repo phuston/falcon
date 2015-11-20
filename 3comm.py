@@ -4,14 +4,14 @@ import serial
 from time import sleep
 import numpy as np
 
-raw_input("Press ENTER to begin Serial connection.")
-serE = serial.Serial('/dev/ttyACM0',9600,timeout=50)
-serNW = serial.Serial('/dev/ttyACM1',9600,timeout=50)
-serSW = serial.Serial('/dev/ttyACM2',9600,timeout=50)
+# raw_input("Press ENTER to begin Serial connection.")
+# serE = serial.Serial('/dev/ttyACM0',9600,timeout=50)
+# serNW = serial.Serial('/dev/ttyACM1',9600,timeout=50)
+# serSW = serial.Serial('/dev/ttyACM2',9600,timeout=50)
 
-print "Hacking into the mainframe... "
-sleep(.5)
-raw_input("Press ENTER to begin. ")
+# print "Hacking into the mainframe... "
+# sleep(.5)
+# raw_input("Press ENTER to begin. ")
 
 def distance(posA, posB):
     ''' Return length of wire from one position tuple to another '''
@@ -30,6 +30,8 @@ def dldp(cameraPos, nodePos, theta, phi):
     return numer/denom
 
 def calcnodes(a, b, c):
+    ''' b is your origin, c is along y axis, a is opposite '''
+
     numer = b**2 + c**2 - a**2
     denom = 2*b*c
     Arad = acos(numer/denom)
@@ -46,6 +48,8 @@ def calcnodes(a, b, c):
     return (a*cos(thetA), a*sin(thetA), 0), (0,0, 0), (0, c, 0)
 
 def calcsend(camera, theta, phi, posA, posB, posC):
+    ''' For directional control '''
+
     Eval = int(100*dldp(camera, posA, theta, phi))
     SWval = int(100*dldp(camera, posB, theta, phi))
     NWval = int(100*dldp(camera, posC, theta, phi))
@@ -58,6 +62,9 @@ def calcsend(camera, theta, phi, posA, posB, posC):
     serNW.write(str(NWval))
 
 def diffcalc(path, node0, node1, node2):
+    ''' given array of coordinates for camera to hit
+        generate an array of lengths for each node '''
+
     node0path = [distance(node0, loc) for loc in path]
     node1path = [distance(node1, loc) for loc in path]
     node2path = [distance(node2, loc) for loc in path]
@@ -66,31 +73,36 @@ def diffcalc(path, node0, node1, node2):
     node1diff = [(node1path[ind+1] - node1path[ind]) for ind in xrange(len(node1path)-1)]
     node2diff = [(node2path[ind+1] - node2path[ind]) for ind in xrange(len(node2path)-1)]
 
+    if (sum(node0diff) + node0path[0]) == node0path[-1]:
+        print 'Math Checks out'
+
     return node0diff, node1diff, node2diff
 
-a = 27.125
-b = 29.25
-c = 28.25
+a = 75.75
+b = 53.25
+c = 89.5
 posA, posB, posC = calcnodes(a,b,c)
-camera = (8.75, 11.0, 24.5)
+camera = (7, 4.5, 18.5)
+
+''' Move north and up 16 inches '''
+path1 = [(camera[0], camera[1] + .1*n, camera[2] - .1*n) for n in xrange(160)]
+camera = (7, 20.5, 2.5)
+
+''' Go in a circle of radius 12 inches '''
+thetas = [((pi) + (m*pi/20)) for m in xrange(41)]
+path2 = [(camera[0] + 6 + 6*cos(theta), camera[1] + 6*sin(theta), camera[2]) for theta in thetas]
+
+path = path1 + path2
+node0diff, node1diff, node2diff = diffcalc(path, posA, posB, posC)
+
+print node0diff
 
 
-t = [n*pi/20 for n in xrange(41)]
-circlePath = [(6*cos(n) + 8, 6*sin(n) + 14, 15) for n in t]
-diff0, diff1, diff2 = diffcalc(circlePath, posA, posB, posC)
-
-for i in xrange(5):
-    theta = 0
-    phi = 3*pi/2
-    calcsend(camera, theta, phi, posA, posB, posC)
-    camera = (camera[0], camera[1], camera[2] - 1)
-
-for i in xrange(len(diff0)):
-    phi = 0
-    serE.write(str(diff0))
-    serSW.write(str(diff1))
-    serNW.write(str(diff2))
-
+for i in len(node0diff):
+    serE.write(node0diff[i])
+    serNW.write(node2diff[i])
+    serSW.write(node1diff[i])
+    sleep(2)
 
 while True:
     cmd = raw_input("")
@@ -103,7 +115,6 @@ while True:
         phi = 0
         calcsend(camera, theta, phi, posA, posB, posC)
         camera = (camera[0], camera[1]+1, camera[2])
-
 
     if cmd is 'a':
         theta = pi

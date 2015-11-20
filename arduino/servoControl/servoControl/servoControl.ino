@@ -1,4 +1,4 @@
-#include <SoftwareSerial.h>  
+#include <SoftwareSerial.h>
 
 int pinAm1 = 2;
 int pinBm1 = 3;
@@ -44,13 +44,13 @@ void setup() {
 }
 
 void loop() {
-  
+
   // BLUETOOTH CONFIGURATION
   if(bluetooth.available() > 0)  // If the bluetooth sent any characters
   {
     // Send any characters the bluetooth prints to the serial monitor
-    Serial.println(bluetooth.parseInt());  
     in = bluetooth.parseInt();
+    Serial.println(in);
   }
 
   //  WIRED SERIAL CONNECTION
@@ -61,7 +61,6 @@ void loop() {
   if (in < 0) {
     dir = 0;
     dis = round(in*(-.01)*steps);
-    digitalWrite(led, HIGH);
   }
 
   else {
@@ -94,6 +93,7 @@ void pulse(int steps, int direction, int speed) {
     digitalWrite(pinEnm1, LOW);
     delay(50);
     digitalWrite(pinEnm1, HIGH);
+
   }
   for (int i = 0; i < steps; i=i+1) {
     digitalWrite(pinBm1, HIGH);
