@@ -49,8 +49,8 @@ void loop() {
   if(bluetooth.available() > 0)  // If the bluetooth sent any characters
   {
     // Send any characters the bluetooth prints to the serial monitor
-    Serial.println(bluetooth.parseInt());  
     in = bluetooth.parseInt();
+     Serial.println(in);  
   }
 
   //  WIRED SERIAL CONNECTION
