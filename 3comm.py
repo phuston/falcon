@@ -5,9 +5,9 @@ from time import sleep
 import numpy as np
 
 raw_input("Press ENTER to begin Serial connection.")
-serE = serial.Serial('/dev/ttyACM4', 9600, timeout=50)
-serNW = serial.Serial('/dev/ttyACM1', 9600, timeout=50)
-serSW = serial.Serial('/dev/ttyACM3', 9600, timeout=50)
+serE = serial.Serial('/dev/rfcomm0', 9600, timeout=50)
+serNW = serial.Serial('/dev/rfcomm1', 9600, timeout=50)
+# serSW = serial.Serial('/dev/ttyACM3', 9600, timeout=50)
 
 print "Hacking into the mainframe... "
 sleep(.5)
@@ -58,7 +58,7 @@ def calcsend(camera, theta, phi, posA, posB, posC):
     print camera
 
     serE.write(str(Eval) + 'g')
-    serSW.write(str(SWval) + 'g')
+    # serSW.write(str(SWval) + 'g')
     serNW.write(str(NWval) + 'g')
 
 def diffcalc(path, node0, node1, node2):
@@ -109,7 +109,7 @@ print node2diff
 for i in xrange(len(node0diff)):
     serE.write(str(node0diff[i]) + 'g')
     serNW.write(str(node2diff[i]) + 'g')
-    serSW.write(str(node1diff[i]) + 'g')
+    # serSW.write(str(node1diff[i]) + 'g')
     sleep(.1)
 
 # node0diff, node1diff, node2diff = diffcalc(path4, posA, posB, posC)
