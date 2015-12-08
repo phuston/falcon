@@ -19,7 +19,7 @@ void setup() {
 }
 
 void loop() {
-  
+
   pulse(800, 1, 0);
   delay(2000);
 }
