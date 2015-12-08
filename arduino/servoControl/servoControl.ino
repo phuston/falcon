@@ -26,14 +26,14 @@ void setup() {
 
   digitalWrite(pinEnm1, HIGH);
 
-  bluetooth.begin(115200); // The Bluetooth Mate defaults to 115200bps
-  bluetooth.print("$"); // Print three times individually
-  bluetooth.print("$");
-  bluetooth.print("$"); // Enter command mode
-  delay(100); // Short delay, wait for the Mate to send back CMD
-  bluetooth.println("U,9600,N"); // Temporarily Change the baudrate to 9600, no parity
-  // 115200 can be too fast at times for NewSoftSerial to relay the data reliably
-  bluetooth.begin(9600); // Start bluetooth serial at 9600
+//  bluetooth.begin(115200); // The Bluetooth Mate defaults to 115200bps
+//  bluetooth.print("$"); // Print three times individually
+//  bluetooth.print("$");
+//  bluetooth.print("$"); // Enter command mode
+//  delay(100); // Short delay, wait for the Mate to send back CMD
+//  bluetooth.println("U,19.2,N"); // Temporarily Change the baudrate to 9600, no parity
+//  // 115200 can be too fast at times for NewSoftSerial to relay the data reliably
+  bluetooth.begin(57600); // Start bluetooth serial at 9600
 }
 
 void loop() {
@@ -44,7 +44,7 @@ void loop() {
 //    Serial.println(bluetooth.parseInt());;
     // Send any characters the bluetooth prints to the serial monitor
     in = bluetooth.parseInt();
-    Serial.println(in);
+    Serial.println(in);  
   }
 
 //  //  WIRED SERIAL CONNECTION
