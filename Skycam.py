@@ -44,7 +44,7 @@ class Skycam:
 
         # spline parameters
         s = 2.0 # smoothness
-        k = 2 # spline order
+        k = 1 # spline order
         nest = -1 # estimate of knots needed
 
         # create spline and calculate length
@@ -193,21 +193,29 @@ class Path:
         mid_BC = tuple((node1[i] + node2[i])/2 for i in xrange(3))
         mid_AC = tuple((node2[i] + node0[i])/2 for i in xrange(3))
 
-        m_A = tuple(mid - node for (mid, node) in zip(mid_BC, node0))
-        m_B = tuple(mid - node for (mid, node) in zip(mid_AC, node1))
-        m_C = tuple(mid - node for (mid, node) in zip(mid_AB, node2))
+        m_A = tuple((mid - node)/distance(mid_BC, node0) for (mid, node) in zip(mid_BC, node0))
+        m_B = tuple((mid - node)/distance(mid_AC, node1) for (mid, node) in zip(mid_AC, node1))
+        m_C = tuple((mid - node)/distance(mid_AB, node2) for (mid, node) in zip(mid_AB, node2))
 
-        new_0 = tuple(coord + slope*5 for (coord, slope) in zip(node0, mid_BC))
-        new_1 = tuple(coord + slope*5 for (coord, slope) in zip(node1, mid_AC))
-        new_2 = tuple(coord + slope*5 for (coord, slope) in zip(node2, mid_AB))
+        new_0 = tuple(coord + slope*5 for (coord, slope) in zip(node0, m_A))
+        new_1 = tuple(coord + slope*5 for (coord, slope) in zip(node1, m_B))
+        new_2 = tuple(coord + slope*5 for (coord, slope) in zip(node2, m_C))
 
-        print node0
-        print node1
-        print node2
+        # print 'N0: ', node0
+        # print 'N1: ', node1
+        # print 'N2: ', node2
 
-        print m_A
-        print m_B
-        print m_C
+        # print 'mBC: ', mid_BC
+        # print 'mAC: ', mid_AC
+        # print 'mAB: ', mid_AB
+
+        # print 'mA: ', m_A
+        # print 'mB: ', m_B
+        # print 'mC: ', m_C
+
+        # print 'New0: ', new_0
+        # print 'New1: ', new_1
+        # print 'New2: ', new_2
 
         if point[2] < 0 or point[2] > 60:
             print 'Height of path out of bounds'
@@ -241,7 +249,15 @@ class Path:
         ''' Return differences between subsequent spool lengths * 100 '''
         return [int(100*(lens[ind+1] - lens[ind])) for ind in xrange(len(lens)-1)]
 
+def distance(A, B):
+    ''' Return length of wire from one position tuple to another '''
+
+    dx = A[0] - B[0]
+    dy = A[1] - B[1]
+    dz = A[2] - B[2]
+    return (dx**2 + dy**2 + dz**2)**.5
+
 
 skycam = Skycam(50, 50, 50, (5, 5, 5))
-waypoints = [(10, 30, 5), (15, 30, 5), (20, 30, 4)]
+waypoints = [(10, 30, 5), (15, 30, 5)]
 skycam.create_path(waypoints, 10)
