@@ -7,24 +7,25 @@ import matplotlib.pyplot as plt
 def distance(posA, posB):
     dx = posA[0] - posB[0]
     dy = posA[1] - posB[1]
-    return (dx**2 + dy**2)**.5
+    dz = posA[2] - posB[2]
+    return (dx**2 + dy**2 + dz**2)**.5
 
 def binarySearch(ustart, s, dl):
-    x, y = splev(ustart, s)
-    point = (x, y)
+    x, y, z = splev(ustart, s)
+    point = (x, y, z)
 
     tol = .01
     ui = ustart
     uf = 1
     um = (ui + uf)/2
-    xm, ym = splev(um, s)
-    xf, yf = splev(uf, s)
+    xm, ym, zm = splev(um, s)
+    xf, yf, zm = splev(uf, s)
 
     while True:
         # xi, yi = splev(ui, s)
         # xf, yf = splev(uf, s)
-        xm, ym = splev(um, s)
-        tpoint = (xm, ym)
+        xm, ym, zm= splev(um, s)
+        tpoint = (xm, ym, zm)
         # print um, distance(point, tpoint)
 
         if distance(point, tpoint)>(dl*(1+tol)):
@@ -39,8 +40,8 @@ def binarySearch(ustart, s, dl):
 def splineLen(s):
     ts = np.linspace(0, 1, 1000)
     totl = 0
-    xs, ys = splev(ts, s)
-    spline = zip(xs, ys)
+    xs, ys, zs = splev(ts, s)
+    spline = zip(xs, ys, zs)
     ipoint = spline[0]
 
     for point in spline:
@@ -50,20 +51,21 @@ def splineLen(s):
     return totl
 
 # declare node positions
-node0 = (0,0)
-node1 = (0, 15)
-node2 = (15, 0)
+node0 = (0,0, 0)
+node1 = (0, 15, 0)
+node2 = (15, 0, 0)
 
-waypoints = [(1,1), (2, 5), (3, 7), (4, 5), (5, 2), (6, 12), (4, 10), (2, 8)]
+waypoints = [(1,1, 0), (2, 5, 0), (3, 7, 0), (4, 5, 0), (5, 2, 0), (6, 12, 0), (4, 10, 0), (2, 8, 0)]
 xpoints  = [point[0] for point in waypoints]
 ypoints = [point[1] for point in waypoints]
+zpoints = [point[2] for point in waypoints]
 
 # spline parameters
 s=2.0 # smoothness parameter
 k=2 # spline order
 nest=-1 # estimate of number of knots needed (-1 = maximal)
 
-s, us = splprep([xpoints, ypoints], s=s,k=k,nest=nest)
+s, us = splprep([xpoints, ypoints, zpoints], s=s,k=k,nest=nest)
 totl = splineLen(s)
 
 time = 10
@@ -75,6 +77,8 @@ i = 0
 u = 0
 upath = [u]
 
+print upath
+
 while i < steps-1:
     u = binarySearch(u, s, dl)
     upath.append(u)
@@ -85,8 +89,9 @@ while i < steps-1:
 print upath
 
 path = [splev(u, s) for u in upath]
-xpath  = [point[0] for point in path]
+xpath = [point[0] for point in path]
 ypath = [point[1] for point in path]
+zpath = [point[2] for point in path]
 
 print path
 
