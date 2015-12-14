@@ -6,33 +6,68 @@ import numpy as np
 from scipy.interpolate import splprep, splev, splrep
 
 class Skycam:
-    def __init__(self, a, b, c, cam):
-        self.node0, self.node1, self.node2 = self.calc_nodes(a,b,c)
+    ''' Represents entire 3-node and camera system. Contains method to calculate
+        and initialize paths, and control the camera.
+    '''
+
+    def __init__(self, a, b, c, zB, zC, cam):
+        ''' Intialize new Skycam with calculated node positions, camera position,
+            in path-controlled mode.
+
+            Inputs:
+                a: (float) length of side a
+                b: (float) length of side b
+                c: (float) length of side c
+                zB: (float) height of point B
+                zC: (float) height of point C
+                cam: (tuple of floats) initial position of camera
+        '''
+        self.node0, self.node1, self.node2 = self.calc_nodes(a, b, c, zB, zC)
         self.cam = cam
         self.direct = False
         self.pause = False
         self.save_point = 0
 
-    def calc_nodes(self, a, b, c):
-        ''' a opposite the origin, b is from A to C, c is along y axis
-            Uppercase are angles, lowercase are lengths '''
+    def calc_nodes(self, a, b, c, zB, zC):
+        ''' Calculate the positions of Skycam nodes based on node distance measurements.
+            A is the origin, B is along the y-axis, C is the remaining point.
+            Sides are opposite their respective points:
+                a is BC, b is AC, c is AB
+
+            Inputs:
+                a: (float) length of side a
+                b: (float) length of side b
+                c: (float) length of side c
+
+            Returns:
+                (tuple of floats) coordinates of node0, node1, node2
+        '''
+        # Project lengths into xy plane
+        a_eff = ((zC-zB)**2 + c**2)**.5
+        b_eff = (zC**2 + b**2)**.5
+        c_eff = (zB**2 + c**2)**.5
+
+
         # Law of cosines
-        numer = b**2 + c**2 - a**2
-        denom = 2*b*c
+        numer = b_eff**2 + c_eff**2 - a_eff**2
+        denom = 2*b_eff*c_eff
         Arad = acos(numer/denom)
 
         # Law of sines
         Brad = asin(b*sin(Arad)/a)
         Crad = asin(c*sin(Arad)/a)
 
-        # A = degrees(Arad)
-        # B = degrees(Brad)
-        # C = degrees(Crad)
         theta = .5*pi-Arad
 
-        return (0,0, 0),  (0, c, 0), (b*cos(theta), b*sin(theta), 0)
+        return (0,0, 0),  (0, c, zB), (b*cos(theta), b*sin(theta), zC)
 
     def load_path(self, points):
+        ''' Initialize a new Path object and assign as attribute of Skycam.
+
+            Inputs:
+                points: (list of tuples of floats) specific camera positions for
+                        any given time.
+        '''
         self.path = Path.new_path(points, self.node0, self.node1, self.node2)
 
     def create_path(self, waypoints, time):
@@ -68,7 +103,7 @@ class Skycam:
         path_lens = []
 
         for i in xrange(len(path) - 1):
-            path_lens.append(self.distance(path[i], path[i+1]))
+            path_lens.append(distance(path[i], path[i+1]))
 
         error = [ele - dl for ele in path_lens]
         print 'Error is: ', sum(error)/len(error)
@@ -79,29 +114,42 @@ class Skycam:
     def go_path(self):
         ''' Start sending serial commands until direct mode is activated or until pause command. If paused, remember last location'''
         while (not self.direct and not self.pause):
-            for i in len(self.path.diffs0[self.save_point]):
-                self.send_command(self.path.diffs0[i], self.path.diffs1[i], self.path.diffs2)
+            for i in len(self.path.diffs0[self.save_point:]):
+                self.send_command(self.path.diffs0[i+self.save_point], self.path.diffs1[i+self.save_point], self.path.diffs2+self.save_point)
                 self.save_point = i
 
 
-    def pause_path():
-        ''' stop sending commands, record current point '''
+    def pause_path(self):
+        ''' Pause the  '''
         self.pause = True
 
-    def switch_mode():
+    def switch_mode(self):
         ''' Switch from path control to joystick control '''
         self.direct = not self.direct
 
-    def go_input():
+    def go_input(self):
         ''' translate a direct-control input into a directional vector and send appropriate commands '''
         pass
 
-    def connect():
-        ''' Run bash script to connect to Arduinos through Bluetooth'''
-        pass
+    def connect(self, baud=57600):
+        ''' Run bash script to connect to Arduinos through proper serial ports '''
 
-    def send_command():
+        # Connect to proper serial ports
+        serA = serial.Serial('/dev/rfcomm0', baud, timeout=50)
+        serB = serial.Serial('/dev/rfcomm1', baud, timeout=50)
+        serC = serial.Serial('/dev/rfcomm2', baud, timeout=50)
+
+
+    def send_command(self, diff0, diff1, diff2):
         ''' send serial commands '''
+
+        serA.write(str(diff0 + 'g'))
+        serB.write(str(diff1 + 'g'))
+        serC.write(str(diff2 + 'g'))
+
+        #TODO: Mess around with this value
+        sleep(.1)
+
         pass
 
     def dldp(self, nodePos, theta, phi):
@@ -114,14 +162,6 @@ class Skycam:
         numer = deltaX*cos(theta)*cos(phi) + deltaY*sin(theta)*cos(phi) + deltaZ*sin(phi)
         denom = (deltaX**2 + deltaY**2 + deltaZ**2)**.5
         return numer/denom
-
-    def distance(self, A, B):
-        ''' Return length of wire from one position tuple to another '''
-
-        dx = A[0] - B[0]
-        dy = A[1] - B[1]
-        dz = A[2] - B[2]
-        return (dx**2 + dy**2 + dz**2)**.5
 
     def binary_search(self, ustart, s, dl, tol=.01):
         ''' Perform a binary search to find parametrized location of point '''
@@ -138,10 +178,10 @@ class Skycam:
         while True:
             tpoint = splev(um, s)
 
-            if self.distance(point, tpoint)>(dl*(1+tol)):
+            if distance(point, tpoint)>(dl*(1+tol)):
                 uf, um = um, (um+ui)/2
 
-            elif self.distance(point, tpoint)<(dl*(1-tol)):
+            elif distance(point, tpoint)<(dl*(1-tol)):
                 ui, um = um, (um+uf)/2
 
             else:
@@ -156,21 +196,43 @@ class Skycam:
         totl = 0
 
         for point in spline:
-            totl += self.distance(point, ipoint)
+            totl += distance(point, ipoint)
             ipoint = point
 
         return totl
 
+    def tighten_A(self):
+        while True:
+            input = raw_input('')
+            if input == ' ':
+                serA.write('30g')
+            elif input == 's':
+                return
 
+    def tighten_B(self):
+        while True:
+            input = raw_input('')
+            if input == ' ':
+                serB.write('30g')
+            elif input == 's':
+                return
+
+    def tighten_C(self):
+        while True:
+            input = raw_input('')
+            if input == ' ':
+                serC.write('30g')
+            elif input == 's':
+                return
 
 class Path:
     ''' Path object stores the physical locations of the camera, and the node length changes needed to hit those spots '''
     def __init__(self, points, node0, node1, node2):
         self.points = points
 
-        self.lens0 = [self.distance(node0, point) for point in points]
-        self.lens1 = [self.distance(node1, point) for point in points]
-        self.lens2 = [self.distance(node2, point) for point in points]
+        self.lens0 = [distance(node0, point) for point in points]
+        self.lens1 = [distance(node1, point) for point in points]
+        self.lens2 = [distance(node2, point) for point in points]
 
         self.diffs0 = self.diff_calc(self.lens0)
         self.diffs1 = self.diff_calc(self.lens1)
@@ -187,7 +249,7 @@ class Path:
 
 
     @staticmethod
-    def boundary(node0, node1, node2, point):
+    def boundary(node0, node1, node2, point, offset=6, hbound=60):
 
         mid_AB = tuple((node0[i] + node1[i])/2 for i in xrange(3))
         mid_BC = tuple((node1[i] + node2[i])/2 for i in xrange(3))
@@ -197,27 +259,11 @@ class Path:
         m_B = tuple((mid - node)/distance(mid_AC, node1) for (mid, node) in zip(mid_AC, node1))
         m_C = tuple((mid - node)/distance(mid_AB, node2) for (mid, node) in zip(mid_AB, node2))
 
-        new_0 = tuple(coord + slope*5 for (coord, slope) in zip(node0, m_A))
-        new_1 = tuple(coord + slope*5 for (coord, slope) in zip(node1, m_B))
-        new_2 = tuple(coord + slope*5 for (coord, slope) in zip(node2, m_C))
+        new_0 = tuple(coord + slope*offset for (coord, slope) in zip(node0, m_A))
+        new_1 = tuple(coord + slope*offset for (coord, slope) in zip(node1, m_B))
+        new_2 = tuple(coord + slope*offset for (coord, slope) in zip(node2, m_C))
 
-        # print 'N0: ', node0
-        # print 'N1: ', node1
-        # print 'N2: ', node2
-
-        # print 'mBC: ', mid_BC
-        # print 'mAC: ', mid_AC
-        # print 'mAB: ', mid_AB
-
-        # print 'mA: ', m_A
-        # print 'mB: ', m_B
-        # print 'mC: ', m_C
-
-        # print 'New0: ', new_0
-        # print 'New1: ', new_1
-        # print 'New2: ', new_2
-
-        if point[2] < 0 or point[2] > 60:
+        if point[2] < 0 or point[2] > hbound:
             print 'Height of path out of bounds'
             return True
 
@@ -237,14 +283,6 @@ class Path:
         else:
             return False
 
-    def distance(self, A, B):
-        ''' Return length of wire from one position tuple to another '''
-
-        dx = A[0] - B[0]
-        dy = A[1] - B[1]
-        dz = A[2] - B[2]
-        return (dx**2 + dy**2 + dz**2)**.5
-
     def diff_calc(self, lens):
         ''' Return differences between subsequent spool lengths * 100 '''
         return [int(100*(lens[ind+1] - lens[ind])) for ind in xrange(len(lens)-1)]
@@ -256,8 +294,3 @@ def distance(A, B):
     dy = A[1] - B[1]
     dz = A[2] - B[2]
     return (dx**2 + dy**2 + dz**2)**.5
-
-
-skycam = Skycam(50, 50, 50, (5, 5, 5))
-waypoints = [(10, 30, 5), (15, 30, 5)]
-skycam.create_path(waypoints, 10)
