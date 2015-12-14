@@ -125,7 +125,7 @@ class Skycam:
 
     def switch_mode(self):
         ''' Switch from path control to joystick control '''
-        self.direct = not self.direct
+        self.direct = !self.direct
 
     def go_input(self):
         ''' translate a direct-control input into a directional vector and send appropriate commands '''
