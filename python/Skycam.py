@@ -113,10 +113,13 @@ class Skycam:
 
     def go_path(self):
         ''' Start sending serial commands until direct mode is activated or until pause command. If paused, remember last location'''
+        #TODO: Implement save point
         while (not self.direct and not self.pause):
-            for i in len(self.path.diffs0[self.save_point:]):
-                self.send_command(self.path.diffs0[i+self.save_point], self.path.diffs1[i+self.save_point], self.path.diffs2+self.save_point)
+            for i in xrange(len(self.path.diffs0)):
+                self.send_command(self.path.diffs0[i], self.path.diffs1[i], self.path.diffs2[i])
+                # raw_input('')
                 self.save_point = i
+            break
 
 
     def pause_path(self):
@@ -125,7 +128,7 @@ class Skycam:
 
     def switch_mode(self):
         ''' Switch from path control to joystick control '''
-        self.direct = !self.direct
+        self.direct = not self.direct
 
     def go_input(self):
         ''' translate a direct-control input into a directional vector and send appropriate commands '''
@@ -135,20 +138,21 @@ class Skycam:
         ''' Run bash script to connect to Arduinos through proper serial ports '''
 
         # Connect to proper serial ports
-        serA = serial.Serial('/dev/rfcomm0', baud, timeout=50)
-        serB = serial.Serial('/dev/rfcomm1', baud, timeout=50)
-        serC = serial.Serial('/dev/rfcomm2', baud, timeout=50)
+        self.serA = serial.Serial('/dev/rfcomm0', baud, timeout=50)
+        self.serB = serial.Serial('/dev/rfcomm1', baud, timeout=50)
+        self.serC = serial.Serial('/dev/rfcomm2', baud, timeout=50)
 
 
     def send_command(self, diff0, diff1, diff2):
         ''' send serial commands '''
+        print diff0, diff1, diff2
 
-        serA.write(str(diff0 + 'g'))
-        serB.write(str(diff1 + 'g'))
-        serC.write(str(diff2 + 'g'))
+        self.serA.write(str(diff0) + 'g')
+        self.serB.write(str(diff1) + 'g')
+        self.serC.write(str(diff2) + 'g')
 
         #TODO: Mess around with this value
-        sleep(.1)
+        sleep(.15)
 
         pass
 
@@ -203,25 +207,25 @@ class Skycam:
 
     def tighten_A(self):
         while True:
-            input = raw_input('')
+            input = raw_input('Tightening Node A')
             if input == ' ':
-                serA.write('30g')
+                self.serA.write('-100g')
             elif input == 's':
                 return
 
     def tighten_B(self):
         while True:
-            input = raw_input('')
+            input = raw_input('Tightening Node B')
             if input == ' ':
-                serB.write('30g')
+                self.serB.write('-100g')
             elif input == 's':
                 return
 
     def tighten_C(self):
         while True:
-            input = raw_input('')
+            input = raw_input('Tightening Node C')
             if input == ' ':
-                serC.write('30g')
+                self.serC.write('-100g')
             elif input == 's':
                 return
 
@@ -249,7 +253,7 @@ class Path:
 
 
     @staticmethod
-    def boundary(node0, node1, node2, point, offset=6, hbound=60):
+    def boundary(node0, node1, node2, point, offset=6, hbound=120):
 
         mid_AB = tuple((node0[i] + node1[i])/2 for i in xrange(3))
         mid_BC = tuple((node1[i] + node2[i])/2 for i in xrange(3))
