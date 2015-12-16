@@ -108,7 +108,8 @@ class Skycam:
         error = [ele - dl for ele in path_lens]
         print 'Error is: ', sum(error)/len(error)
 
-        self.path = Path.new_path(path, self.node0, self.node1, self.node2)
+        self.load_path(path)
+        # self.path = Path.new_path(path, self.node0, self.node1, self.node2)
 
 
     def go_path(self):
@@ -152,7 +153,7 @@ class Skycam:
         self.serC.write(str(diff2) + 'g')
 
         #TODO: Mess around with this value
-        sleep(.15)
+        sleep(.25)
 
         pass
 
@@ -205,23 +206,21 @@ class Skycam:
 
         return totl
 
-    def tighten_A(self):
+    def tighten(self):
         while True:
             input = raw_input('Tightening Node A')
             if input == ' ':
                 self.serA.write('-100g')
             elif input == 's':
-                return
+                break
 
-    def tighten_B(self):
         while True:
             input = raw_input('Tightening Node B')
             if input == ' ':
                 self.serB.write('-100g')
             elif input == 's':
-                return
+                break
 
-    def tighten_C(self):
         while True:
             input = raw_input('Tightening Node C')
             if input == ' ':
