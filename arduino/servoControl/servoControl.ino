@@ -6,7 +6,7 @@ int pinEnm1 = 4;
 
 int led = 13;
 char in;
-int steps = 250;
+int steps = 226;
 int dir;
 int dis;
 int len;
@@ -71,7 +71,7 @@ void loop() {
   }
   pulse(dis, dir, 1);
 
-//  delay(100);
+  delay(50);
     in = 0;
 }
 
