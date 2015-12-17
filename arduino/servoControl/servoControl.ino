@@ -6,7 +6,7 @@ int pinEnm1 = 4;
 
 int led = 13;
 char in;
-int steps = 226;
+int steps = 250;
 int dir;
 int dis;
 int len;
@@ -45,7 +45,7 @@ void loop() {
 //    Serial.println(bluetooth.parseInt());;
     // Send any characters the bluetooth prints to the serial monitor
     in = bluetooth.parseInt();
-    Serial.println(in);  
+    Serial.println(in);
 //    delay(80);
   }
 
@@ -54,23 +54,23 @@ void loop() {
 //    in = Serial.parseInt();
 //    Serial.println(in);
 //  }
-  
+
   if (in < 0) {
     dir = 0;
     dis = round(in*(-.01)*steps);
   }
-  
+
   else {
     dir = 1;
     dis = round(in*.01*steps);
   }
-  
+
   // len = (int) dis;
   if (dis == 0) {
     delayMicroseconds(2660);
   }
   pulse(dis, dir, 1);
-  
+
 //  delay(100);
     in = 0;
 }
