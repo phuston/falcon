@@ -34,6 +34,7 @@ void setup() {
 //  bluetooth.println("U,19.2,N"); // Temporarily Change the baudrate to 9600, no parity
 //  // 115200 can be too fast at times for NewSoftSerial to relay the data reliably
   bluetooth.begin(57600); // Start bluetooth serial at 9600
+  bluetooth.setTimeout(50);
 }
 
 void loop() {
@@ -45,6 +46,7 @@ void loop() {
     // Send any characters the bluetooth prints to the serial monitor
     in = bluetooth.parseInt();
     Serial.println(in);  
+//    delay(80);
   }
 
 //  //  WIRED SERIAL CONNECTION
@@ -69,7 +71,7 @@ void loop() {
   }
   pulse(dis, dir, 1);
   
-  delay(100);
+//  delay(100);
     in = 0;
 }
 
@@ -81,7 +83,7 @@ void pulse(int steps, int direction, int speed) {
   digitalWrite(pinAm1, direction);
   if (speed == 0) {
     digitalWrite(pinEnm1, LOW);
-    delay(50);
+    delay(10);
     digitalWrite(pinEnm1, HIGH);
 
   }
