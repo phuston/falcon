@@ -188,7 +188,7 @@ class Skycam:
         self.serC.write(str(diff2) + 'g')
 
         #TODO: Always mess around with this value
-        sleep(.23)
+        sleep(.35)
 
         pass
 
@@ -365,19 +365,19 @@ class Path:
         new_2 = tuple(coord + slope*offset for (coord, slope) in zip(node2, m_C))
 
         if point[2] < 0 or point[2] > hbound:
-            print 'Height of path out of bounds'
+            print 'Height of path out of bounds', point[2]
             return True
 
         elif point[0] < 0:
-            print "Path out of bounds of line AB"
+            print "Path out of bounds of line AB", point[0]
             return True
 
         elif point[1] < (new_2[1]*point[0]/new_2[0]):
-            print "Path out of bounds of line AC"
+            print "Path out of bounds of line AC", point[1]
             return True
 
         elif point[1] > (((new_2[1] - new_1[1])/new_2[0])*point[0] + new_1[1]):
-            print "Path out of bounds of line BC"
+            print "Path out of bounds of line BC", point[1]
             return True
 
         else:
